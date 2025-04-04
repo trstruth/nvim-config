@@ -13,6 +13,12 @@ vim.opt.termguicolors = true
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+-- Use spaces instead of tabs, and 4 spaces wide
+vim.opt.expandtab = true   -- tabs become spaces
+vim.opt.shiftwidth = 4     -- >> and << shift by 4
+vim.opt.tabstop = 4        -- tab key = 4 spaces
+vim.opt.smartindent = true -- smart auto-indenting
+
 -- Line numbers
 vim.opt.number = true         -- Absolute line numbers
 vim.opt.relativenumber = true -- Relative line numbers
