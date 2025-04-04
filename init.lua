@@ -26,6 +26,9 @@ vim.opt.relativenumber = true -- Relative line numbers
 -- case-insensitive search/replace
 vim.opt.ignorecase = true
 
+-- system clipboard
+vim.opt.clipboard = "unnamedplus"
+
 -- Splits
 vim.keymap.set("n", "<leader>w", "<cmd>vsplit<CR>", { desc = "Horizontal split" })
 vim.keymap.set("n", "<leader>v", "<cmd>split<CR>", { desc = "Vertical split" })

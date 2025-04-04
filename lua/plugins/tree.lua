@@ -10,7 +10,13 @@ return {
                 local api = require("nvim-tree.api")
 
                 local function opts(desc)
-                    return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+                    return {
+                        desc = "nvim-tree: " .. desc,
+                        buffer = bufnr,
+                        noremap = true,
+                        silent = true,
+                        nowait = true,
+                    }
                 end
 
                 -- Default mappings
@@ -20,10 +26,10 @@ return {
                 vim.keymap.set("n", "h", api.node.navigate.parent_close, opts("Close Directory"))
                 vim.keymap.set("n", "l", api.node.open.edit, opts("Open"))
 
-                -- Create new file with Ctrl+n
+                -- Ctrl+n to create file
                 vim.keymap.set("n", "<C-n>", api.fs.create, opts("Create File"))
 
-                -- Create new folder with Ctrl+Shift+n (works only if terminal supports it as <C-S-n>)
+                -- Ctrl+Shift+n to create folder (depends on terminal support)
                 vim.keymap.set("n", "<C-S-n>", function()
                     vim.ui.input({ prompt = "Folder name: " }, function(input)
                         if input and input ~= "" then
@@ -32,8 +38,11 @@ return {
                     end)
                 end, opts("Create Folder"))
 
-                -- Delete with Delete key (requires terminal to send <Del>)
+                -- Delete with <Del>
                 vim.keymap.set("n", "<Del>", api.fs.remove, opts("Delete with confirm"))
+
+                -- Enter to open in current window (buffer-style)
+                vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open: In Current Window"))
             end
 
             require("nvim-tree").setup({
