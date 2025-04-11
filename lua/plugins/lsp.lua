@@ -38,6 +38,7 @@ return {
                         },
                         checkOnSave = {
                             command = "clippy",
+                            extraArgs = { "--tests" }
                         },
                         inlayHints = { enable = true },
                     },
