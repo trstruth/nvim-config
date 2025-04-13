@@ -62,6 +62,8 @@ vim.keymap.set("n", "[e", function()
     vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
 end, { desc = "Previous error" })
 
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = "Exit terminal mode" })
+
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
