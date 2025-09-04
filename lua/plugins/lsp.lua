@@ -25,22 +25,35 @@ return {
       require("mason").setup()
 
       local lspconfig = require("lspconfig")
+      local util = lspconfig.util
 
       -- --------------------
-      -- Rust (as you have)
+      -- Rust (msrustup aware)
       -- --------------------
-      local rustfmt = vim.trim(vim.fn.system("rustup which rustfmt --toolchain 1.88.0"))
-      if rustfmt == "" then rustfmt = "rustfmt" end
+      local ms_toolchain = "ms-1.82" -- Match repo rust-toolchain.toml
+      local mason_ra = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
+      local ra_exec = (vim.fn.executable(mason_ra) == 1) and mason_ra or "rust-analyzer"
+
+      -- Use MS toolchain by environment so cargo/rustc invoked by rust-analyzer
+      -- go through msrustup multiplexing.
+      local ra_cmd = { ra_exec }
+      local ra_cmd_env = {
+        MSRUSTUP_TOOLCHAIN = ms_toolchain,
+      }
 
       lspconfig.rust_analyzer.setup({
         capabilities = capabilities,
-        cmd_env = { RUSTUP_TOOLCHAIN = "ms-prod-1.88" },
-        root_dir = lspconfig.util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
+        cmd = ra_cmd,
+        cmd_env = ra_cmd_env,
+        root_dir = util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
         settings = {
           ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
+            cargo = {
+              allFeatures = true,
+              buildScripts = { enable = true }, -- needed for tonic/prost
+            },
+            procMacro = { enable = true },
             check = { command = "check" },
-            rustfmt = { overrideCommand = { rustfmt, "--edition", "2021" } },
             diagnostics = { enable = true },
           },
         },
@@ -65,7 +78,7 @@ return {
       lspconfig.gopls.setup({
         cmd = gopls_cmd,
         capabilities = capabilities,
-        root_dir = lspconfig.util.root_pattern("go.work", "go.mod", ".git"),
+        root_dir = util.root_pattern("go.work", "go.mod", ".git"),
         settings = {
           gopls = {
             -- Formatting & imports:
@@ -97,4 +110,3 @@ return {
     end,
   },
 }
-

@@ -29,6 +29,65 @@ vim.opt.ignorecase = true
 -- system clipboard
 vim.opt.clipboard = "unnamedplus"
 
+-- Portable clipboard provider (WSL, Linux/Wayland, Linux/X11)
+local function has(cmd) return vim.fn.executable(cmd) == 1 end
+local is_wsl = (vim.fn.has("wsl") == 1) or (vim.loop.os_uname().release or ""):match("Microsoft")
+
+if is_wsl then
+  if has("win32yank.exe") then
+    -- Fastest/cleanest on WSL if present
+    vim.g.clipboard = {
+      name = "win32yank",
+      copy = { ["+"] = "win32yank.exe -i --crlf", ["*"] = "win32yank.exe -i --crlf" },
+      paste = { ["+"] = "win32yank.exe -o --lf",   ["*"] = "win32yank.exe -o --lf"   },
+      cache_enabled = 0,
+    }
+  elseif has("pwsh.exe") then
+    -- PowerShell 7 gives Set-Clipboard / Get-Clipboard
+    vim.g.clipboard = {
+      name = "pwsh",
+      copy  = { ["+"] = "pwsh.exe -NoProfile -Command Set-Clipboard", ["*"] = "pwsh.exe -NoProfile -Command Set-Clipboard" },
+      paste = { ["+"] = "pwsh.exe -NoProfile -Command Get-Clipboard", ["*"] = "pwsh.exe -NoProfile -Command Get-Clipboard" },
+      cache_enabled = 0,
+    }
+  else
+    -- Classic Windows PowerShell v5 + clip.exe
+    vim.g.clipboard = {
+      name = "WslClipboard",
+      copy  = { ["+"] = "clip.exe", ["*"] = "clip.exe" },
+      paste = {
+        ["+"] = "powershell.exe -NoProfile -Command Get-Clipboard",
+        ["*"] = "powershell.exe -NoProfile -Command Get-Clipboard",
+      },
+      cache_enabled = 0,
+    }
+  end
+else
+  -- Native Linux (no WSL): prefer Wayland, then X11
+  if os.getenv("WAYLAND_DISPLAY") and has("wl-copy") and has("wl-paste") then
+    vim.g.clipboard = {
+      name = "wl-clipboard",
+      copy  = { ["+"] = "wl-copy", ["*"] = "wl-copy" },
+      paste = { ["+"] = "wl-paste --no-newline", ["*"] = "wl-paste --no-newline" },
+      cache_enabled = 0,
+    }
+  elseif has("xclip") then
+    vim.g.clipboard = {
+      name = "xclip",
+      copy  = { ["+"] = "xclip -selection clipboard -in",  ["*"] = "xclip -selection primary -in" },
+      paste = { ["+"] = "xclip -selection clipboard -out", ["*"] = "xclip -selection primary -out" },
+      cache_enabled = 0,
+    }
+  elseif has("xsel") then
+    vim.g.clipboard = {
+      name = "xsel",
+      copy  = { ["+"] = "xsel --clipboard --input",  ["*"] = "xsel --primary --input" },
+      paste = { ["+"] = "xsel --clipboard --output", ["*"] = "xsel --primary --output" },
+      cache_enabled = 0,
+    }
+  end
+end
+
 -- Splits
 vim.keymap.set("n", "<leader>w", "<cmd>vsplit<CR>", { desc = "Horizontal split" })
 vim.keymap.set("n", "<leader>v", "<cmd>split<CR>", { desc = "Vertical split" })
