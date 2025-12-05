@@ -117,62 +117,93 @@ return {
 
 
             --------------------------------------------------------------------
-            -- rust-analyzer
+            -- rust-analyzer (new API: vim.lsp.config)
             --------------------------------------------------------------------
-            local ms_toolchain = "ms-1.82"
-            local mason_ra = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
-            local ra_exec = (vim.fn.executable(mason_ra) == 1) and mason_ra or "rust-analyzer"
+            do
+                local ms_toolchain = "ms-1.82"
+                local mason_ra = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
+                local ra_exec = (vim.fn.executable(mason_ra) == 1) and mason_ra or "rust-analyzer"
 
-            vim.lsp.config["rust_analyzer"] = {
-                cmd = { ra_exec },
-                cmd_env = { MSRUSTUP_TOOLCHAIN = ms_toolchain },
-                capabilities = capabilities,
-                root_dir = util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
-                settings = {
-                    ["rust-analyzer"] = {
-                        cargo = {
-                            allFeatures = true,
-                            buildScripts = { enable = true },
-                        },
-                        procMacro = { enable = true },
-                        check = { command = "check" },
-                        diagnostics = { enable = true },
-                    },
-                },
-            }
-
-            vim.lsp.enable("rust_analyzer")
-
-            --------------------------------------------------------------------
-            -- gopls
-            --------------------------------------------------------------------
-            vim.lsp.config["gopls"] = {
-                cmd = { "gopls" },
-                capabilities = capabilities,
-                root_dir = util.root_pattern("go.work", "go.mod", ".git"),
-                settings = {
-                    gopls = {
-                        gofumpt = true,
-                        staticcheck = true,
-                        analyses = {
-                            unusedparams = true,
-                            nilness = true,
-                            shadow = true,
-                            unusedwrite = true,
-                            useany = true,
-                        },
-                        directoryFilters = { "-vendor" },
-                        usePlaceholders = true,
-                        hints = {
-                            assignVariableTypes = true,
-                            parameterNames = true,
+                vim.lsp.config["rust_analyzer"] = {
+                    cmd = { ra_exec },
+                    cmd_env = { MSRUSTUP_TOOLCHAIN = ms_toolchain },
+                    capabilities = capabilities,
+                    filetypes = { "rust" },
+                    root_dir = util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
+                    settings = {
+                        ["rust-analyzer"] = {
+                            cargo = { allFeatures = true, buildScripts = { enable = true } },
+                            procMacro = { enable = true },
+                            check = { command = "check" },
+                            diagnostics = { enable = true },
                         },
                     },
-                },
-            }
+                }
 
-            vim.lsp.enable("gopls")
+                vim.lsp.enable("rust_analyzer")
+            end
+
+            --------------------------------------------------------------------
+            -- gopls (new API: vim.lsp.config)
+            --------------------------------------------------------------------
+            do
+                vim.lsp.config["gopls"] = {
+                    cmd = { "gopls" },
+                    capabilities = capabilities,
+                    filetypes = { "go", "gomod", "gowork", "gotmpl" },
+                    root_dir = util.root_pattern("go.work", "go.mod", ".git"),
+                    settings = {
+                        gopls = {
+                            gofumpt = true,
+                            staticcheck = true,
+                            analyses = {
+                                unusedparams = true,
+                                nilness = true,
+                                shadow = true,
+                                unusedwrite = true,
+                                useany = true,
+                            },
+                            directoryFilters = { "-vendor" },
+                            usePlaceholders = true,
+                            hints = { assignVariableTypes = true, parameterNames = true },
+                        },
+                    },
+                }
+
+                vim.lsp.enable("gopls")
+            end
+
+            --------------------------------------------------------------------
+            -- Fallback autostart (ensure attach even if enable() hooks are missing)
+            --------------------------------------------------------------------
+            local function ensure_started(server, patterns)
+                vim.api.nvim_create_autocmd("FileType", {
+                    pattern = patterns,
+                    callback = function(args)
+                        local bufnr = args.buf
+                        -- Avoid duplicate work if already attached
+                        if #vim.lsp.get_clients({ buf = bufnr, name = server }) > 0 then
+                            return
+                        end
+                        local cfg = (vim.lsp.config._configs or {})[server]
+                        if not cfg then return end
+
+                        -- Derive root_dir for this buffer if a detector exists
+                        local fname = vim.api.nvim_buf_get_name(bufnr)
+                        local start_cfg = vim.tbl_deep_extend("force", {}, cfg)
+                        if type(cfg.root_dir) == "function" then
+                            start_cfg.root_dir = cfg.root_dir(fname)
+                        end
+                        start_cfg.name = server
+
+                        -- Start or reuse an existing client for this root_dir
+                        vim.lsp.start(start_cfg)
+                    end,
+                })
+            end
+
+            ensure_started("gopls", { "go", "gomod", "gowork", "gotmpl" })
+            ensure_started("rust_analyzer", { "rust" })
         end,
     },
 }
-
