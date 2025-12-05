@@ -12,6 +12,12 @@ return {
 
             -- Grep through project (respects .gitignore)
             vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<CR>", { desc = "Live grep" })
-        end,
-    },
+
+            -- Global diagnostics across all buffers
+            vim.keymap.set("n", "<leader>fd", "<cmd>Telescope diagnostics<CR>", { desc = "Diagnostics (global)" })
+            vim.keymap.set("n", "<leader>fD", function()
+                require("telescope.builtin").diagnostics({ bufnr = 0 })
+            end, { desc = "Diagnostics (current buffer)" })
+                    end,
+        },
 }
