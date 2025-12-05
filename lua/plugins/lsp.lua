@@ -124,13 +124,13 @@ return {
             -- rust-analyzer (new API: vim.lsp.config)
             --------------------------------------------------------------------
             do
-                local ms_toolchain = "ms-1.82"
+                -- local ms_toolchain = "ms-1.82"
                 local mason_ra = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
                 local ra_exec = (vim.fn.executable(mason_ra) == 1) and mason_ra or "rust-analyzer"
 
                 vim.lsp.config["rust_analyzer"] = {
                     cmd = { ra_exec },
-                    cmd_env = { MSRUSTUP_TOOLCHAIN = ms_toolchain },
+                    cmd_env = { MSRUSTUP_TOOLCHAIN = "stable" },
                     capabilities = capabilities,
                     filetypes = { "rust" },
                     root_dir = util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
