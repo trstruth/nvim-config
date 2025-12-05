@@ -1,4 +1,5 @@
 -- init.lua
+vim.loader.enable()
 
 -- Set leader key
 vim.g.mapleader = ","
@@ -107,11 +108,16 @@ vim.keymap.set("n", "<leader>x", "<cmd>wq<CR>", { desc = "Save and quit" })
 -- Force quit (close without saving)
 vim.keymap.set("n", "<leader>Q", "<cmd>q!<CR>", { desc = "Force quit" })
 
+-- LSP
+-- vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+-- vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, { desc = "Hover doc" })
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
 vim.keymap.set("n", "<leader>th", function()
     vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end, { desc = "Toggle inline type hints" })
+
+
 
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })
