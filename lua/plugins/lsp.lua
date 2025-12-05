@@ -18,6 +18,10 @@ return {
         update_in_insert = false,
       })
 
+      -- Enable LSP semantic tokens (Neovim sends them by default if server supports).
+      -- Make sure we don't opt-out via any overrides.
+      vim.g.lsp_semantic_tokens_enabled = true
+
       --------------------------------------------------------------------
       -- Capabilities (cmp integration)
       --------------------------------------------------------------------
