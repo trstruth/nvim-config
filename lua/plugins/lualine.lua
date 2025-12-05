@@ -5,7 +5,7 @@ return {
         config = function()
             require("lualine").setup({
                 options = {
-                    theme = "auto", -- Uses your colorscheme
+                    theme = "jellybeans",
                     section_separators = "",
                     component_separators = "",
                     icons_enabled = true,
