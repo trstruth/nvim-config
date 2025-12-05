@@ -119,6 +119,27 @@ vim.keymap.set("n", "[e", function()
     vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
 end, { desc = "Previous error" })
 
+-- Toggle maximize current window (tmux-style)
+local window_is_maximized = false
+local window_restore_cmd = ""
+
+function ToggleMaximizeWindow()
+    if window_is_maximized then
+        -- Restore previous layout
+        vim.cmd(window_restore_cmd)
+        window_is_maximized = false
+    else
+        -- Save restore command
+        window_restore_cmd = vim.fn.winrestcmd()
+        -- Maximize this window (full height + full width)
+        vim.cmd("wincmd _")
+        vim.cmd("wincmd |")
+        window_is_maximized = true
+    end
+end
+
+vim.keymap.set("n", "<leader>z", ToggleMaximizeWindow, { desc = "Toggle maximize window" })
+
 vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- Bootstrap lazy.nvim
