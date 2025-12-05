@@ -107,8 +107,6 @@ vim.keymap.set("n", "<leader>x", "<cmd>wq<CR>", { desc = "Save and quit" })
 -- Force quit (close without saving)
 vim.keymap.set("n", "<leader>Q", "<cmd>q!<CR>", { desc = "Force quit" })
 
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
-vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, { desc = "Hover doc" })
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
 

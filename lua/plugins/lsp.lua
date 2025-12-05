@@ -5,6 +5,7 @@ return {
     dependencies = {
       "williamboman/mason.nvim",
       "hrsh7th/cmp-nvim-lsp",
+      "nvim-telescope/telescope.nvim",
     },
     config = function()
       -- Diagnostics UI
@@ -21,58 +22,70 @@ return {
         capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
       end)
 
-      -- Mason (binaries only)
+      -- Mason binary manager
       require("mason").setup()
 
       local lspconfig = require("lspconfig")
       local util = lspconfig.util
+      local tb = require("telescope.builtin")
 
-      -- --------------------
-      -- Rust (msrustup aware)
-      -- --------------------
-      local ms_toolchain = "ms-1.82" -- Match repo rust-toolchain.toml
+      ---------------------------------------------------
+      -- Shared on_attach: formatting + LSP keybindings --
+      ---------------------------------------------------
+      local function on_attach(client, bufnr)
+        -- Auto-format on save if supported
+        if client.server_capabilities.documentFormattingProvider then
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            callback = function()
+              vim.lsp.buf.format({ bufnr = bufnr })
+            end,
+          })
+        end
+
+        -- Buffer-local keymap helper
+        local function map(lhs, rhs, desc)
+          vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
+        end
+
+        ---------------------------------------------------
+        -- LSP Navigation (Telescope-powered)
+        ---------------------------------------------------
+        map("gd", function() tb.lsp_definitions({ initial_mode = "normal" }) end, "Go to definition")
+        map("gr", function() tb.lsp_references({ initial_mode = "normal" }) end, "Find references")
+        map("gi", function() tb.lsp_implementations({ initial_mode = "normal" }) end, "Go to implementations")
+        map("gy", function() tb.lsp_type_definitions({ initial_mode = "normal" }) end, "Go to type definitions")
+      end
+
+      --------------------
+      -- Rust Analyzer --
+      --------------------
+      local ms_toolchain = "ms-1.82"
       local mason_ra = vim.fn.stdpath("data") .. "/mason/bin/rust-analyzer"
       local ra_exec = (vim.fn.executable(mason_ra) == 1) and mason_ra or "rust-analyzer"
 
-      -- Use MS toolchain by environment so cargo/rustc invoked by rust-analyzer
-      -- go through msrustup multiplexing.
-      local ra_cmd = { ra_exec }
-      local ra_cmd_env = {
-        MSRUSTUP_TOOLCHAIN = ms_toolchain,
-      }
-
       lspconfig.rust_analyzer.setup({
         capabilities = capabilities,
-        cmd = ra_cmd,
-        cmd_env = ra_cmd_env,
+        cmd = { ra_exec },
+        cmd_env = { MSRUSTUP_TOOLCHAIN = ms_toolchain },
         root_dir = util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
         settings = {
           ["rust-analyzer"] = {
             cargo = {
               allFeatures = true,
-              buildScripts = { enable = true }, -- needed for tonic/prost
+              buildScripts = { enable = true },
             },
             procMacro = { enable = true },
             check = { command = "check" },
             diagnostics = { enable = true },
           },
         },
-        on_attach = function(client, bufnr)
-          if client.server_capabilities.documentFormattingProvider then
-            vim.api.nvim_create_autocmd("BufWritePre", {
-              buffer = bufnr,
-              callback = function() vim.lsp.buf.format({ bufnr = bufnr }) end,
-            })
-          end
-        end,
+        on_attach = on_attach,
       })
 
-      -- ---------------
+      --------------
       -- Go (gopls)
-      -- ---------------
-      -- If gopls isn’t on PATH, point directly to Mason’s binary:
-      -- local gopls_cmd = { vim.fn.expand("~/.local/share/nvim/mason/bin/gopls") }
-      -- Otherwise just use "gopls":
+      --------------
       local gopls_cmd = { "gopls" }
 
       lspconfig.gopls.setup({
@@ -81,9 +94,7 @@ return {
         root_dir = util.root_pattern("go.work", "go.mod", ".git"),
         settings = {
           gopls = {
-            -- Formatting & imports:
-            gofumpt = true,            -- stricter formatting
-            -- Analyses & checks:
+            gofumpt = true,
             staticcheck = true,
             analyses = {
               unusedparams = true,
@@ -92,21 +103,17 @@ return {
               unusedwrite = true,
               useany = true,
             },
-            -- Performance/UX:
             directoryFilters = { "-vendor" },
             usePlaceholders = true,
-            hints = { assignVariableTypes = true, parameterNames = true },
+            hints = {
+              assignVariableTypes = true,
+              parameterNames = true,
+            },
           },
         },
-        on_attach = function(client, bufnr)
-          if client.server_capabilities.documentFormattingProvider then
-            vim.api.nvim_create_autocmd("BufWritePre", {
-              buffer = bufnr,
-              callback = function() vim.lsp.buf.format({ bufnr = bufnr }) end,
-            })
-          end
-        end,
+        on_attach = on_attach,
       })
     end,
   },
 }
+
