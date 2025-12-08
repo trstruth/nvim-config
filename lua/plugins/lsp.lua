@@ -220,6 +220,42 @@ return {
           vim.lsp.start(vim.lsp.config["tsserver"], { bufnr = args.buf })
         end,
       })
+
+      ---------------------------------------------------------------------------
+      -- Protocol Buffers — Buf Language Server (bufls)
+      -- Prefer Mason binary if installed; fall back to system installations.
+      ---------------------------------------------------------------------------
+      -- Prefer the Buf CLI installed via Mason. The language server runs as:
+      --   buf beta lsp  (uses stdio when --pipe is not specified)
+      local mason_buf = vim.fn.stdpath("data") .. "/mason/bin/buf"
+      local buf_exec = (vim.fn.executable(mason_buf) == 1) and mason_buf
+        or ((vim.fn.executable("buf") == 1) and "buf" or nil)
+      -- Fallbacks for legacy servers if present
+      local legacy_bufls = (vim.fn.executable("buf-language-server") == 1) and "buf-language-server"
+        or ((vim.fn.executable("bufls") == 1) and "bufls" or nil)
+
+      if buf_exec or legacy_bufls then
+        vim.lsp.config["bufls"] = {
+          -- Prefer Buf CLI in beta lsp mode; otherwise use legacy server binary
+          cmd = buf_exec and { buf_exec, "beta", "lsp" } or { legacy_bufls },
+          capabilities = capabilities,
+          on_attach = on_attach,
+          filetypes = { "proto" },
+          single_file_support = true,
+          -- Try to anchor on buf config; otherwise fall back to the file's directory
+          root_dir = function(fname)
+            local r = util.root_pattern("buf.work.yaml", "buf.yaml", ".git")(fname)
+            return r or util.path.dirname(fname)
+          end,
+        }
+
+        vim.api.nvim_create_autocmd("FileType", {
+          pattern = "proto",
+          callback = function(args)
+            vim.lsp.start(vim.lsp.config["bufls"], { bufnr = args.buf })
+          end,
+        })
+      end
     end,
   },
 }

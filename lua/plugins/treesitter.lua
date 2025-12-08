@@ -12,6 +12,8 @@ return {
                 "go", "gomod", "gowork", "rust",
                 -- TS/JS
                 "javascript", "typescript", "tsx", "jsdoc",
+                -- Proto
+                "proto",
             },
         })
 
