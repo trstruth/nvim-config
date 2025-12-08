@@ -113,7 +113,8 @@ vim.keymap.set("n", "<leader>Q", "<cmd>q!<CR>", { desc = "Force quit" })
 -- vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
 vim.keymap.set("n", "<leader>h", vim.lsp.buf.hover, { desc = "Hover doc" })
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
-vim.keymap.set("n", "<leader>th", function()
+-- Toggle inline type hints
+vim.keymap.set("n", "<leader>ih", function()
     vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end, { desc = "Toggle inline type hints" })
 
