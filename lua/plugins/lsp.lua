@@ -145,7 +145,81 @@ return {
           vim.lsp.start(vim.lsp.config["gopls"], { bufnr = args.buf })
         end,
       })
+
+      ---------------------------------------------------------------------------
+      -- TypeScript/JavaScript (Node) — typescript-language-server (tsserver)
+      ---------------------------------------------------------------------------
+      -- Prefer Mason installation if present
+      local mason_ts = vim.fn.stdpath("data") .. "/mason/bin/typescript-language-server"
+      local ts_exec = (vim.fn.executable(mason_ts) == 1) and mason_ts or "typescript-language-server"
+
+      vim.lsp.config["tsserver"] = {
+        cmd = { ts_exec, "--stdio" },
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = {
+          "typescript",
+          "typescriptreact",
+          "typescript.tsx",
+          "javascript",
+          "javascriptreact",
+          "javascript.jsx",
+        },
+        -- Do not start in Deno projects (use denols there instead)
+        root_dir = function(fname)
+          if util.root_pattern("deno.json", "deno.jsonc")(fname) then
+            return nil
+          end
+          return util.root_pattern("tsconfig.json", "jsconfig.json", "package.json", ".git")(fname)
+        end,
+        -- Enable useful inlay hints and completion prefs out of the box
+        settings = {
+          typescript = {
+            inlayHints = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+            preferences = {
+              includeCompletionsForModuleExports = true,
+              includeCompletionsWithInsertTextCompletions = true,
+            },
+          },
+          javascript = {
+            inlayHints = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+            preferences = {
+              includeCompletionsForModuleExports = true,
+              includeCompletionsWithInsertTextCompletions = true,
+            },
+          },
+        },
+      }
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = {
+          "typescript",
+          "typescriptreact",
+          "typescript.tsx",
+          "javascript",
+          "javascriptreact",
+          "javascript.jsx",
+        },
+        callback = function(args)
+          vim.lsp.start(vim.lsp.config["tsserver"], { bufnr = args.buf })
+        end,
+      })
     end,
   },
 }
-

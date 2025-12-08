@@ -7,7 +7,12 @@ return {
             indent = { enable = true },
             -- Ensure parsers for languages you work with so function/method
             -- nodes can be highlighted by Tree-sitter too.
-            ensure_installed = { "lua", "vim", "markdown", "c", "go", "gomod", "gowork", "rust" },
+            ensure_installed = {
+                "lua", "vim", "markdown", "c",
+                "go", "gomod", "gowork", "rust",
+                -- TS/JS
+                "javascript", "typescript", "tsx", "jsdoc",
+            },
         })
 
         -- For Neovim versions where Tree-sitter highlighting can be overridden
